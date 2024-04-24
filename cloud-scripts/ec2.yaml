@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation Template to deploy t3a.xlarge EC2 with 24GB of space, assign IAM group, and apply security group.
+
+Resources:
+  AnalitiqEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType:
+        Ref: InstanceTypeParameter
+      ImageId:
+        Ref: InstanceImageIdParameter # Replace with a valid AMI ID
+      KeyName:
+        Ref: InstanceKeyParameter # Updated Key Pair Name
+      BlockDeviceMappings:
+        - DeviceName: "/dev/xvda"
+          Ebs:
+            VolumeSize: 24
+      SecurityGroups: ["Analitiq-App-Security-Group"]
+      IamInstanceProfile: Analitiq-App-Prod-EC2-Prod
+      Tags:
+        - Key: "Name"
+          Value:
+            Ref: InstanceNameParameter # EC2 instance name
+
+  EIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref AnalitiqEC2Instance
+      AllocationId:
+        Ref: IpAllocationParameter # Replace with your Elastic IP's Allocation ID
+
+Outputs:
+  InstanceId:
+    Description: The Instance ID
+    Value: !Ref AnalitiqEC2Instance
+
+Parameters:
+  InstanceNameParameter:
+    Type: String
+    Default: "Analitiq Dev"
+    Description: Enter Instance Name. Example Analitiq Dev.
+
+  IpAllocationParameter:
+    Type: String
+    Default: ""
+    Description: Please enter the Allocation ID of the IP address you wish to associate with the EC2 instance
+
+  InstanceTypeParameter:
+    Type: String
+    Default: t3a.xlarge
+    AllowedValues:
+      - t2.micro
+      - m1.small
+      - m1.large
+      - t3a.xlarge
+    Description: Enter instance type t2.micro, t3a.xlarge, m1.small, or m1.large. Default is t3a.xlarge.
+
+  InstanceImageIdParameter:
+    Type: String
+    Default: ami-0669b163befffbdfc
+    Description: Enter instance image ID. Default is ami-0669b163befffbdfc.
+
+  InstanceKeyParameter:
+    Type: String
+    Default: developer
+    Description: Enter key to be associated with instance. Default is developer.
